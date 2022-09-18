@@ -1,0 +1,1 @@
+/home/cicio/dev/advent-of-code/2016/2/target/debug/aoc: /home/cicio/dev/advent-of-code/2016/2/src/example /home/cicio/dev/advent-of-code/2016/2/src/input /home/cicio/dev/advent-of-code/2016/2/src/main.rs

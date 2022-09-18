@@ -1,4 +1,8 @@
-use std::{str::FromStr, string::ParseError};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+    string::ParseError,
+};
 
 enum Orientation {
     North,
@@ -91,6 +95,8 @@ fn part_two() -> i32 {
         .map(Result::unwrap)
         .collect();
 
+    let mut visited_places: HashSet<(i32, i32)> = HashSet::new();
+
     let mut orientation = Orientation::North;
     let (mut x, mut y) = (0, 0);
 
@@ -117,6 +123,16 @@ fn part_two() -> i32 {
             Direction::R(distance) => match orientation {
                 Orientation::North => {
                     orientation = Orientation::East;
+
+                    let new_x = x + distance;
+                    for offset in x..=new_x {
+                        if visited_places.contains(&(offset, y)) {
+                            return offset.abs() + y.abs();
+                        }
+
+                        visited_places.insert((x, y));
+                    }
+
                     x += distance;
                 }
                 Orientation::East => {
