@@ -25,10 +25,12 @@ impl Password {
             .map(|letter| letter.to_string())
             .collect();
 
-        ((*letters.get(self.lower_bound as usize - 1).unwrap() == self.letter)
-            || !(*letters.get(self.upper_bound as usize - 1).unwrap() == self.letter))
-            && (*letters.get(self.lower_bound as usize - 1).unwrap()
-                != *letters.get(self.upper_bound as usize - 1).unwrap())
+        let (left, right) = (
+            (*letters.get(self.lower_bound as usize - 1).unwrap()).clone(),
+            (*letters.get(self.upper_bound as usize - 1).unwrap()).clone(),
+        );
+
+        !(left == right || (left != self.letter && right != self.letter))
     }
 }
 
@@ -57,7 +59,6 @@ fn part_one() -> u32 {
         .map(Result::unwrap)
         .filter(Password::is_valid_one)
         .count() as u32
-    // 591
 }
 
 fn part_two() -> u32 {
@@ -68,7 +69,6 @@ fn part_two() -> u32 {
         .map(Result::unwrap)
         .filter(Password::is_valid)
         .count() as u32
-    // 591
 }
 
 fn main() {
