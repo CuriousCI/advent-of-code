@@ -1,3 +1,5 @@
+use std::string::ParseError;
+
 fn is_passport_valid(passport: &Vec<&str>) -> bool {
     let mut has_cid = false;
     for information in passport {
@@ -23,11 +25,44 @@ fn are_fields_valid(passport: &Vec<&str>) -> bool {
     for information in passport {
         let (key, value) = information.split_once(':').unwrap();
         match key {
-            "byr" => {}
-            "iyr" => {}
-            "eyr" => {}
+            "byr" => {
+                let year = value.parse::<i32>();
+                match year {
+                    Ok(value) => {
+                        if value < 1920 && value > 2002 {
+                            return false;
+                        }
+                    }
+                    Err(_) => return false,
+                }
+            }
+            "iyr" => {
+                let year = value.parse::<i32>();
+                match year {
+                    Ok(value) => {
+                        if value < 2010 && value > 2020 {
+                            return false;
+                        }
+                    }
+                    Err(_) => return false,
+                }
+            }
+            "eyr" => {
+                let year = value.parse::<i32>();
+                match year {
+                    Ok(value) => {
+                        if value < 2020 && value > 2030 {
+                            return false;
+                        }
+                    }
+                    Err(_) => return false,
+                }
+            }
             "hgt" => {}
-            "hcl" => {}
+            "hcl" => {
+                if 
+
+            }
             "ecl" => {}
             "pid" => {}
             "cid" => {}
