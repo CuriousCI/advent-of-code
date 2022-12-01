@@ -1,5 +1,3 @@
-use std::string::ParseError;
-
 fn is_passport_valid(passport: &Vec<&str>) -> bool {
     let mut has_cid = false;
     for information in passport {
