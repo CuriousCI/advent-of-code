@@ -22,12 +22,11 @@ fn part_one() -> u32 {
                         "Z" => 6,
                         _ => 0,
                     },
-                    "C" => match me {
+                    _ => match me {
                         "Z" => 3,
                         "X" => 6,
                         _ => 0,
                     },
-                    _ => unreachable!(),
                 }
         })
         .sum()
