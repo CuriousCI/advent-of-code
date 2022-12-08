@@ -23,7 +23,6 @@ fn part_one<'a>() -> u32 {
     let mut path: Vec<&str> = vec![];
     // let mut folders: HashMap<String, Folder> = HashMap::new();
 
-    "".splitn
     let commands: Vec<(&str, &str)> = include_str!("input")
         .trim_start_matches("$ ")
         // .replace("cd ", "cd\n")
