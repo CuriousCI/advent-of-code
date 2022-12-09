@@ -1,37 +1,81 @@
 // use std::{collections::HashMap, ops::Deref};
 
+// #[derive(Debug)]
+// struct Folder {
+//     files_size: u32,
+//     folders: Vec<Folder>,
+// }
+//
+//
+
+use std::collections::HashMap;
+
 #[derive(Debug)]
-struct Folder {
-    files_size: u32,
-    folders: Vec<Folder>,
+struct Folder<'a> {
+    files: u32,
+    folders: HashMap<String, Folder<'a>>,
+    parent: Option<&'a Folder<'a>>,
 }
 
-impl Folder {
-    fn new() -> Self {
-        Self {
-            files_size: 0,
-            folders: vec![],
-        }
-    }
-
-    fn size(&self) -> u32 {
-        return self.files_size + self.folders.iter().map(|folder| folder.size()).sum::<u32>();
+impl<'a> Folder<'a> {
+    fn get(&mut self, name: String, folder: Folder<'a>) -> &Folder<'a> {
+        self.folders.entry(name).or_insert(folder)
     }
 }
 
 fn part_one<'a>() -> u32 {
-    let mut path: Vec<&str> = vec![];
-    // let mut folders: HashMap<String, Folder> = HashMap::new();
-
-    let commands: Vec<(&str, &str)> = include_str!("input")
+    let file = include_str!("input")
         .trim_start_matches("$ ")
-        // .replace("cd ", "cd\n")
+        .replace("ls\n", "ls ");
+
+    let commands: Vec<(&str, &str)> = file
         .split("\n$ ")
-        .map(|command| command.split_once("\n").unwrap())
+        .map(|command| command.split_once(" ").unwrap())
         .collect();
 
-    println!("{:?}", commands);
+    let root = Folder {
+        files: 0,
+        folders: HashMap::new(),
+        parent: None,
+    };
 
+    let mut current_folder = &root;
+
+    for (command, parameter) in commands {
+        // get a reference to current directory! And insert it
+
+        match command {
+            "cd" => {
+                current_folder = match parameter {
+                    "/" => &root,
+                    ".." => current_folder.parent.unwrap(),
+                    _ => current_folder.get(
+                        parameter.to_string(),
+                        Folder {
+                            files: 0,
+                            folders: HashMap::new(),
+                            parent: Some(&current_folder),
+                        },
+                    ),
+                }
+            }
+            "ls" => {
+                for (file_type, info) in parameter.lines().map(|line| line.split_once(" ").unwrap())
+                {
+                    match file_type {
+                        "dir" => {
+                            // add full path to current directory
+                        }
+                        _ => {
+                            let size: u32 = info.parse().unwrap();
+                            // add size to current directory
+                        }
+                    }
+                }
+            }
+            _ => unreachable!(),
+        };
+    }
     // {
     //     match &command[..2] {
     //         "cd" => {
