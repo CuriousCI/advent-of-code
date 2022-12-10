@@ -1,29 +1,39 @@
-// use std::{collections::HashMap, ops::Deref};
-
-// #[derive(Debug)]
-// struct Folder {
-//     files_size: u32,
-//     folders: Vec<Folder>,
-// }
-//
-//
-
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 #[derive(Debug)]
-struct Folder<'a> {
-    files: u32,
-    folders: HashMap<String, Folder<'a>>,
-    parent: Option<&'a Folder<'a>>,
+struct Folder {
+    files: RefCell<u32>,
+    folders: RefCell<HashMap<String, Rc<Folder>>>,
+    parent: Option<Rc<Folder>>,
 }
 
-impl<'a> Folder<'a> {
-    fn get(&mut self, name: String, folder: Folder<'a>) -> &Folder<'a> {
-        self.folders.entry(name).or_insert(folder)
+impl Folder {
+    fn new(parent: Option<Rc<Folder>>) -> Self {
+        Self {
+            files: RefCell::new(0),
+            folders: RefCell::new(HashMap::new()),
+            parent,
+        }
+    }
+
+    fn insert(&self, name: String, folder: Rc<Folder>) {
+        self.folders.borrow_mut().insert(name, folder);
+    }
+
+    fn size(&self) -> u32 {
+        *self.files.borrow()
+            + self
+                .folders
+                .borrow()
+                .values()
+                .map(|folder| folder.size())
+                .sum::<u32>()
     }
 }
 
-fn part_one<'a>() -> u32 {
+fn part_one() -> u32 {
     let file = include_str!("input")
         .trim_start_matches("$ ")
         .replace("ls\n", "ls ");
@@ -33,42 +43,34 @@ fn part_one<'a>() -> u32 {
         .map(|command| command.split_once(" ").unwrap())
         .collect();
 
-    let root = Folder {
-        files: 0,
-        folders: HashMap::new(),
-        parent: None,
-    };
+    let mut folders: Vec<Rc<Folder>> = vec![];
 
-    let mut current_folder = &root;
+    let root = Rc::new(Folder::new(None));
+    let mut folder = Rc::clone(&root);
 
-    for (command, parameter) in commands {
-        // get a reference to current directory! And insert it
-
-        match command {
+    for (left, right) in commands {
+        match left {
             "cd" => {
-                current_folder = match parameter {
-                    "/" => &root,
-                    ".." => current_folder.parent.unwrap(),
-                    _ => current_folder.get(
-                        parameter.to_string(),
-                        Folder {
-                            files: 0,
-                            folders: HashMap::new(),
-                            parent: Some(&current_folder),
-                        },
-                    ),
+                folder = match right {
+                    "/" => Rc::clone(&root),
+                    ".." => Rc::clone(&folder.parent.as_ref().unwrap()),
+                    _ => Rc::clone(&folder.folders.borrow().get(right).unwrap()),
                 }
             }
             "ls" => {
-                for (file_type, info) in parameter.lines().map(|line| line.split_once(" ").unwrap())
-                {
-                    match file_type {
+                for (info, name) in right.lines().map(|line| line.split_once(" ").unwrap()) {
+                    match info {
                         "dir" => {
-                            // add full path to current directory
+                            let f = Rc::new(Folder::new(Some(Rc::clone(&folder))));
+                            folders.push(Rc::clone(&f));
+                            folder.insert(
+                                name.to_string(),
+                                Rc::clone(&f), // Rc::new(Folder::new(Some(Rc::clone(&folder)))),
+                            );
                         }
                         _ => {
                             let size: u32 = info.parse().unwrap();
-                            // add size to current directory
+                            *folder.files.borrow_mut() += size;
                         }
                     }
                 }
@@ -76,46 +78,78 @@ fn part_one<'a>() -> u32 {
             _ => unreachable!(),
         };
     }
-    // {
-    //     match &command[..2] {
-    //         "cd" => {
-    //             let directory = &command[3..];
-    //             match directory {
-    //                 "/" => path.clear(),
-    //                 ".." => {
-    //                     path.pop();
-    //                 }
-    //                 _ => path.push(directory),
-    //             }
-    //         }
-    //         "ls" => {
-    //             for item in command[3..].lines() {
-    //                 let mut folder = Folder::new();
-    //
-    //                 match &item[..3] {
-    //                     "dir" => {
-    //                         let directory = &item[4..];
-    //                     }
-    //                     _ => {
-    //                         let (size, _) = item.split_once(" ").unwrap();
-    //                         let size: u32 = size.parse().unwrap();
-    //                         folder.files_size += size;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //         _ => unreachable!(),
-    //     };
-    // }
 
-    // for folder in folders {
-    //     println!("{:?}", folder);
-    // }
-    // println!("{:?}", folders);
+    folders
+        .iter()
+        .map(|folder| folder.size())
+        .filter(|size| *size <= 100000)
+        .sum()
+}
 
-    10
+fn part_two() -> u32 {
+    let file = include_str!("input")
+        .trim_start_matches("$ ")
+        .replace("ls\n", "ls ");
+
+    let commands: Vec<(&str, &str)> = file
+        .split("\n$ ")
+        .map(|command| command.split_once(" ").unwrap())
+        .collect();
+
+    let mut folders: Vec<Rc<Folder>> = vec![];
+
+    let root = Rc::new(Folder::new(None));
+    let mut folder = Rc::clone(&root);
+
+    for (left, right) in commands {
+        match left {
+            "cd" => {
+                folder = match right {
+                    "/" => Rc::clone(&root),
+                    ".." => Rc::clone(&folder.parent.as_ref().unwrap()),
+                    _ => Rc::clone(&folder.folders.borrow().get(right).unwrap()),
+                }
+            }
+            "ls" => {
+                for (info, name) in right.lines().map(|line| line.split_once(" ").unwrap()) {
+                    match info {
+                        "dir" => {
+                            let f = Rc::new(Folder::new(Some(Rc::clone(&folder))));
+                            folders.push(Rc::clone(&f));
+                            folder.insert(
+                                name.to_string(),
+                                Rc::clone(&f), // Rc::new(Folder::new(Some(Rc::clone(&folder)))),
+                            );
+                        }
+                        _ => {
+                            let size: u32 = info.parse().unwrap();
+                            *folder.files.borrow_mut() += size;
+                        }
+                    }
+                }
+            }
+            _ => unreachable!(),
+        };
+    }
+
+    let total_space: i32 = 70000000;
+    let required_space: i32 = 30000000;
+
+    let occupied_space: i32 = root.size() as i32;
+
+    let mut sizes: Vec<u32> = folders.iter().map(|folder| folder.size()).collect();
+    sizes.sort();
+
+    for size in sizes {
+        if (total_space - occupied_space) + size as i32 >= required_space {
+            return size;
+        }
+    }
+
+    unreachable!()
 }
 
 fn main() {
     println!("{}", part_one());
+    println!("{}", part_two());
 }
