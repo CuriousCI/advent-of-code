@@ -2,13 +2,13 @@ use std::{cell::RefCell, cmp::Reverse, str::FromStr, string::ParseError};
 
 #[derive(Debug)]
 struct Monkey {
-    items: RefCell<Vec<u128>>,
+    items: RefCell<Vec<u64>>,
     operator: String,
     operand: String,
-    test: u128,
+    test: u64,
     truthy: usize,
     falsy: usize,
-    operations: u128,
+    operations: u64,
 }
 
 impl FromStr for Monkey {
@@ -36,9 +36,9 @@ impl FromStr for Monkey {
 }
 
 impl Monkey {
-    fn inspect(&mut self) -> Vec<(usize, u128)> {
+    fn inspect(&mut self) -> Vec<(usize, u64)> {
         let mut items = self.items.borrow_mut();
-        let mut throw: Vec<(usize, u128)> = vec![];
+        let mut throw: Vec<(usize, u64)> = vec![];
 
         for item in items.iter() {
             let mut i = *item;
@@ -68,13 +68,13 @@ impl Monkey {
         throw
     }
 
-    fn push(&self, item: u128) {
+    fn push(&self, item: u64) {
         let mut items = self.items.borrow_mut();
         items.push(item);
     }
 }
 
-fn part_one() -> u128 {
+fn part_one() -> u64 {
     let mut monkeys: Vec<Monkey> = include_str!("input")
         .split("\n\n")
         .map(str::parse)
@@ -89,13 +89,13 @@ fn part_one() -> u128 {
         }
     }
 
-    let mut operations: Vec<u128> = monkeys.iter().map(|monkey| monkey.operations).collect();
+    let mut operations: Vec<u64> = monkeys.iter().map(|monkey| monkey.operations).collect();
     operations.sort_by_key(|w| Reverse(*w));
-    operations[0] * operations[1]
+    operations.iter().take(2).product()
 }
 
-fn part_two() -> u128 {
-    let mut monkeys: Vec<Monkey> = include_str!("input")
+fn part_two() -> u64 {
+    let mut monkeys: Vec<Monkey> = include_str!("example")
         .split("\n\n")
         .map(str::parse)
         .map(Result::unwrap)
@@ -109,9 +109,9 @@ fn part_two() -> u128 {
         }
     }
 
-    let mut operations: Vec<u128> = monkeys.iter().map(|monkey| monkey.operations).collect();
+    let mut operations: Vec<u64> = monkeys.iter().map(|monkey| monkey.operations).collect();
     operations.sort_by_key(|w| Reverse(*w));
-    operations[0] * operations[1]
+    operations.iter().take(2).product()
 }
 
 fn main() {
