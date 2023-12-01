@@ -66,7 +66,7 @@ impl FromStr for Item {
 }
 
 fn part_one() -> usize {
-    include_str!("example")
+    let result: Vec<usize> = include_str!("example")
         .split("\n\n")
         .map(|pair| pair.split_once("\n").unwrap())
         .map(|(left, right)| {
@@ -78,7 +78,9 @@ fn part_one() -> usize {
         .enumerate()
         .filter(|(_, (left, right))| left < right)
         .map(|(index, _)| index)
-        .sum()
+        .collect();
+
+    result.iter().sum::<usize>() + result.len()
 
     // println!("{:?}", pairs);
 }
