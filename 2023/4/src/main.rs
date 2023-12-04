@@ -7,15 +7,16 @@ fn part_one() -> u64 {
             line.split_once(':')
                 .and_then(|(_, line)| line.split_once('|'))
         })
-        .map(|(card, winning_numbers)| {
-            let winners: HashSet<&str> = winning_numbers.split_whitespace().collect();
-            let winnings_count = card
+        .map(|(card, winners)| {
+            let winners: HashSet<&str> = winners.split_whitespace().collect();
+
+            let wins = card
                 .split_whitespace()
                 .filter(|n| winners.contains(n))
                 .count();
 
-            if winnings_count > 0 {
-                (2 as u64).pow(winnings_count as u32 - 1)
+            if wins > 0 {
+                (2 as u64).pow(wins as u32 - 1)
             } else {
                 0
             }
@@ -23,28 +24,28 @@ fn part_one() -> u64 {
         .sum()
 }
 
-fn part_two() -> u128 {
-    let winnings: Vec<usize> = include_str!("input")
+fn part_two() -> u64 {
+    let wins: Vec<usize> = include_str!("input")
         .lines()
         .filter_map(|line| {
             line.split_once(':')
                 .and_then(|(_, line)| line.split_once('|'))
         })
-        .map(|(card, winning_numbers)| {
-            let winning_numbers: HashSet<&str> = winning_numbers.split_whitespace().collect();
+        .map(|(card, winners)| {
+            let winners: HashSet<&str> = winners.split_whitespace().collect();
 
             card.split_whitespace()
-                .filter(|n| winning_numbers.contains(n))
+                .filter(|n| winners.contains(n))
                 .count()
         })
         .collect();
 
-    let mut copies: Vec<u128> = vec![1; winnings.len()];
+    let mut copies: Vec<_> = vec![1; wins.len()];
 
-    for (index, &winning) in winnings.iter().enumerate() {
-        if winning > 0 {
-            for card in index + 1..index + winning + 1 {
-                copies[card] += copies[index];
+    for (id, &wins) in wins.iter().enumerate() {
+        if wins > 0 {
+            for next in id + 1..id + wins + 1 {
+                copies[next] += copies[id];
             }
         }
     }
