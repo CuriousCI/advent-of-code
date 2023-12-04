@@ -138,7 +138,7 @@ fn part_two() -> u64 {
                 }
             } else if !number.is_empty() {
                 for gear_number in gear_numbers.iter() {
-                    gears[gear_number as usize].push(number.parse().unwrap());
+                    gears[*gear_number as usize].push(number.parse().unwrap());
                 }
                 number = String::new();
             }
