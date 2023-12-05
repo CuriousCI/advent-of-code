@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 fn part_one() -> u64 {
     let matrix: Vec<Vec<char>> = include_str!("input")
         .lines()
@@ -102,7 +104,7 @@ fn part_two() -> u64 {
     }
 
     let mut gears: Vec<Vec<u64>> = vec![];
-    let mut gear_id = 0;
+    let mut gear_id = 1;
 
     for (y, line) in matrix.iter().enumerate() {
         for (x, symbol) in line.iter().enumerate() {
@@ -125,23 +127,41 @@ fn part_two() -> u64 {
         }
     }
 
-    let mut result = 0;
+    gears.push(vec![]);
 
     for (y, line) in matrix.iter().enumerate() {
         let mut number = String::new();
-        let mut gear_numbers = vec![];
+        let mut touched_gears = HashSet::new();
         for (x, ch) in line.iter().enumerate() {
             if ch.is_digit(10) {
                 number.push(*ch);
                 if gear_ids[y][x] != 0 {
-                    gear_numbers.push(gear_ids[y][x]);
+                    touched_gears.insert(gear_ids[y][x]);
                 }
             } else if !number.is_empty() {
-                for gear_number in gear_numbers.iter() {
-                    gears[*gear_number as usize].push(number.parse().unwrap());
+                let n: u64 = number.parse().unwrap();
+                for &gear in touched_gears.iter() {
+                    gears[gear as usize].push(n);
                 }
                 number = String::new();
+                touched_gears = HashSet::new();
+            } else {
+                touched_gears = HashSet::new();
             }
+        }
+        if !number.is_empty() {
+            let n: u64 = number.parse().unwrap();
+            for &gear in touched_gears.iter() {
+                gears[gear as usize].push(n);
+            }
+        }
+    }
+
+    let mut result = 0;
+
+    for g in gears.iter() {
+        if g.len() == 2 {
+            result += g[0] * g[1];
         }
     }
 
