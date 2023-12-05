@@ -28,6 +28,9 @@ fn part_one() -> u64 {
 
                     // Save index in third place?
                     // Save to HashMap?
+                    // Maybe use a single big tuple for all the sections in reverse order, and
+                    // (even if it seems impossible?)
+                    // search a (seed, 0, 0, 0, ..., 0)
                     ((v[1], v[1] + v[2]), (v[0], v[0] + v[2]))
                 })
                 .unzip()
