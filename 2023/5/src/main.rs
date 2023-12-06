@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use std::sync::mpsc::channel;
-use std::thread;
 
 pub fn binary_search<T: Ord>(array: &Vec<(u64, u64)>, value: &u64) -> usize {
     let mut step = array.len();
@@ -33,75 +31,71 @@ pub fn binary_search<T: Ord>(array: &Vec<(u64, u64)>, value: &u64) -> usize {
 }
 
 fn part_two() -> u64 {
-    let (tx, rx) = channel();
+    // let mut sections = include_str!("input").split("\r\n\r\n");
+    let mut sections = include_str!("test").split("\n\n");
 
-    thread::scope(|scope| {
-        let mut sections = include_str!("input").split("\n\n");
+    let seeds: Vec<u64> = sections
+        .next()
+        .unwrap()
+        .strip_prefix("seeds: ")
+        .unwrap()
+        .split_whitespace()
+        .map(&str::parse)
+        .map(Result::unwrap)
+        .collect();
 
-        let seeds: Vec<u64> = sections
-            .next()
-            .unwrap()
-            .strip_prefix("seeds: ")
-            .unwrap()
-            .split_whitespace()
-            .map(&str::parse)
-            .map(Result::unwrap)
-            .collect();
+    let sections: Vec<(Vec<_>, HashMap<_, _>)> = sections
+        .map(|section| {
+            let (mut vec, map): (Vec<_>, HashMap<_, _>) = section
+                .lines()
+                .skip(1)
+                .map(|line| {
+                    let v: Vec<u64> = line
+                        .split_whitespace()
+                        .map(&str::parse)
+                        .map(Result::unwrap)
+                        .collect();
 
-        let sections: Vec<(Vec<_>, HashMap<_, _>)> = sections
-            .map(|section| {
-                let (mut vec, map): (Vec<_>, HashMap<_, _>) = section
-                    .lines()
-                    .skip(1)
-                    .map(|line| {
-                        let v: Vec<u64> = line
-                            .split_whitespace()
-                            .map(&str::parse)
-                            .map(Result::unwrap)
-                            .collect();
+                    ((v[1], v[1] + v[2]), ((v[1], v[1] + v[2]), v[0]))
+                })
+                .unzip();
 
-                        ((v[1], v[1] + v[2]), ((v[1], v[1] + v[2]), v[0]))
-                    })
-                    .unzip();
+            vec.sort_unstable();
 
-                vec.sort_unstable();
+            (vec, map)
+        })
+        .collect();
 
-                (vec, map)
-            })
-            .collect();
+    for (section, _) in sections.iter() {
+        println!("{:?}", section);
+    }
 
-        for chunk in seeds.chunks(2) {
-            let tx = tx.clone();
-            let range = chunk[0]..chunk[0] + chunk[1];
-            let sections = sections.clone();
+    seeds
+        .chunks(2)
+        .enumerate()
+        .map(|(loading, chunk)| {
+            println!("{}%", (loading + 1) / seeds.len() / 2);
+            (chunk[0]..chunk[0] + chunk[1])
+                .map(|seed| {
+                    let mut translation = seed;
 
-            scope.spawn(move || {
-                let min = range
-                    .map(|seed| {
-                        let mut translation = seed;
-
-                        for (ranges, translate) in sections.iter() {
-                            let index = binary_search::<(u64, u64)>(ranges, &translation);
-                            let translated_range_start = translate[&ranges[index]];
-                            let (left, right) = ranges[index];
-                            if translation >= left && translation < right {
-                                let offset = translation - left;
-                                translation = translated_range_start + offset;
-                            }
+                    for (ranges, translate) in sections.iter() {
+                        let index = binary_search::<(u64, u64)>(ranges, &translation);
+                        let translated_range_start = translate[&ranges[index]];
+                        let (left, right) = ranges[index];
+                        if translation >= left && translation < right {
+                            let offset = translation - left;
+                            translation = translated_range_start + offset;
                         }
+                    }
 
-                        translation
-                    })
-                    .min()
-                    .unwrap();
-
-                tx.send(min).unwrap();
-            });
-        }
-    });
-
-    drop(tx);
-    rx.iter().min().unwrap()
+                    translation
+                })
+                .min()
+                .unwrap()
+        })
+        .min()
+        .unwrap()
 }
 
 fn main() {
